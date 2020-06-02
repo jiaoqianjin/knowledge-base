@@ -64,7 +64,7 @@ docker:隔离，镜像 (最核心的环境”4m + jdk + mysq1) 十分的小巧�
 
 > 之前的虚拟机技术   
 
-​        ![1590832932354](C:\Users\dell\AppData\Roaming\Typora\typora-user-images\1590832932354.png)
+​        ![1590832932354](images/1590832932354.png)
 
 **虚拟机技术缺点：**
 
@@ -76,7 +76,7 @@ docker:隔离，镜像 (最核心的环境”4m + jdk + mysq1) 十分的小巧�
 
 容器化技术不是模拟的一个完成的操作系统
 
-![1590833214416](C:\Users\dell\AppData\Roaming\Typora\typora-user-images\1590833214416.png)
+![1590833214416](images/1590833214416.png)
 
 **比较Docker与虚拟机技术的不同**
 
@@ -112,7 +112,7 @@ Docker是内核级别的虚拟化,可以再一个物理机 上可以运行很多
 
 ##### Docker的基本组成
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\7557a09941824d089fa1bc52acf539e6\clipboard.png)
+![img](images/clipboard.png)
 
 1. 镜像
 
@@ -205,11 +205,11 @@ docker version
 
 ##### run 的运行流程图 
 
-##### ![1590834468452](C:\Users\dell\AppData\Roaming\Typora\typora-user-images\1590834468452.png)  
+##### ![1590834468452](images/1590834468452.png)  
 
    ##### 底层原理
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\c5f3b5631d2444f9880bf0947b9193f1\clipboard.png)
+![img](images/clipboard-1591086764775.png)
 
 ​        Docker为什么比VM快？
 
@@ -219,13 +219,13 @@ docker version
 
 ​            
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\250d33e6071b4624824070959aa8119e\clipboard.png)
+![img](images/clipboard-1591086771966.png)
 
 ​            所以说，新建一个容器的时候，docker不需要像虚拟机一样重新加载一个操作系统内核，避免引导。虚拟机是加载Guest OS，分钟级别的，而docker是利用宿主机的操作系统，省略了这个复杂的过程，秒级。
 
 ​        
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\0084cf7f092042d2aa13040665487668\clipboard.png)
+![img](images/clipboard-1591086774235.png)
 
 #### Docker常用命令
 
@@ -304,11 +304,11 @@ docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=
 
    \# docker inspect 
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\1d95b8ff44144e64b2c9a8c0256c139d\clipboard.png)
+![img](images/clipboard-1591086778258.png)
 
 测试文件的同步
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\7beb73d6e93341a7841ff7c40a13c2d3\clipboard.png)
+![img](images/clipboard-1591086781475.png)
 
 再来测试 ！
 
@@ -326,7 +326,7 @@ docker start 容器 id docker attach 容器 id  # 进入正在运行的容器
 
 \4. 容器上的数据依旧是同步的
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\170ad3644ff44683b00c2f18fd0f136e\clipboard.png)
+![img](images/clipboard-1591086784090.png)
 
 **好处：我们以后修改只需要在本地修改即可，容器内会自动同步！**
 
@@ -344,15 +344,15 @@ docker start 容器 id docker attach 容器 id  # 进入正在运行的容器
 [root@kuangshen home]# docker run -p 3306:3306 --name mysql -v /data/mysql/conf:/etc/mysql/conf.d -v /data/mysql/logs:/logs -v /data/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7 
 ```
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\2995c3105aa344f782b5b844ec88ae35\clipboard.png)
+![img](images/clipboard-1591086786356.png)
 
 具名和匿名挂载
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\ef707126f6be48f18832bc11c24c7e96\clipboard.png)
+![img](images/clipboard-1591086788388.png)
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\22531a8b230e4221ab486a98be9fd25f\clipboard.png)
+![img](images/clipboard-1591086790517.png)
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\01413e4b2a834960ad270d288b1b7c11\clipboard.png)
+![img](images/clipboard-1591086792835.png)
 
 #### SpringBoot微服务打包Dcoker镜像
 

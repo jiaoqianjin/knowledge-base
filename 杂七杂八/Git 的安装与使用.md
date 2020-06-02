@@ -2,19 +2,19 @@
 
 https://git-scm.com/ 进入git官网
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\ffb4f5e120904fc2be48777d7c5b8737\clipboard.png)
+![img](images/clipboard.png)
 
 下载后点击“傻瓜式”安装即可
 
 打开windows 左上角出现标志即安装成功
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\0029711928d44cf6b0377b6514052739\clipboard.png)
+![img](images/clipboard-1591086676844.png)
 
 ### 1. Git 基本配置
 
 点击Git Bash
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\15e451fe9e8d4f7d9b545d9dc39960d4\clipboard.png)
+![img](images/clipboard-1591086680026.png)
 
 1）配置的是你个人的用户名称和电子邮件地址，后期提交时可以显示自己的信息
 
@@ -53,11 +53,11 @@ cat ~/.ssh/id_rsa.pub //查看公钥
 
 也可在本地c:user/dell/.ssh文件中查看
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\f1aecbbf9d8b4f88b6c57d157270b5b4\clipboard.png)
+![img](images/clipboard-1591086684098.png)
 
 复制公钥 添加到码云ssh公钥中
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\5139f1def9714524abb27483fd5a4d29\clipboard.png)
+![img](images/clipboard-1591086686683.png)
 
 标题可自动生成，默认为自己的信息，也可自行修改
 
@@ -103,7 +103,7 @@ $ git commit -m "1.0.0"
 
 1）获得ssh地址
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\fd360e30ec2848619b4f7ec9a2696ccf\clipboard.png)
+![img](images/clipboard-1591086690690.png)
 
 关联命令
 
@@ -124,7 +124,7 @@ $ git pull --rebase origin master
 
 此时本地文件所在文件夹会多出几个文件夹
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\dc86e38f436e46dd9818c89b4314b499\clipboard.png)
+![img](images/clipboard-1591086693892.png)
 
 3）推送到远程仓库
 
@@ -139,7 +139,7 @@ $ git push -u origin master -f # 强制提交
 
 4）在码云仓库中刷新，即可看到自己提交的文件
 
-![img](E:\有道笔记\qq8A56EC72AACBDFBB0BBA5D9AC8BA9598\c93494fc7a39490aa10a9c7260924cd8\clipboard.png)
+![img](images/clipboard-1591086697371.png)
 
 
 
