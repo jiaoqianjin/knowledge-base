@@ -2,19 +2,19 @@
 
 https://git-scm.com/ 进入git官网
 
-![img](images/clipboard.png)
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223311.png)
 
 下载后点击“傻瓜式”安装即可
 
 打开windows 左上角出现标志即安装成功
 
-![img](images/clipboard-1591086676844.png)
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223326.png)
 
 ### 1. Git 基本配置
 
 点击Git Bash
 
-![img](images/clipboard-1591086680026.png)
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223327.png)
 
 1）配置的是你个人的用户名称和电子邮件地址，后期提交时可以显示自己的信息
 
@@ -53,11 +53,11 @@ cat ~/.ssh/id_rsa.pub //查看公钥
 
 也可在本地c:user/dell/.ssh文件中查看
 
-![img](images/clipboard-1591086684098.png)
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223328.png)
 
 复制公钥 添加到码云ssh公钥中
 
-![img](images/clipboard-1591086686683.png)
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223329.png)
 
 标题可自动生成，默认为自己的信息，也可自行修改
 
@@ -103,7 +103,7 @@ $ git commit -m "1.0.0"
 
 1）获得ssh地址
 
-![img](images/clipboard-1591086690690.png)
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223330.png)
 
 关联命令
 
@@ -124,7 +124,7 @@ $ git pull --rebase origin master
 
 此时本地文件所在文件夹会多出几个文件夹
 
-![img](images/clipboard-1591086693892.png)
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223331.png)
 
 3）推送到远程仓库
 
@@ -139,7 +139,7 @@ $ git push -u origin master -f # 强制提交
 
 4）在码云仓库中刷新，即可看到自己提交的文件
 
-![img](images/clipboard-1591086697371.png)
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223332.png)
 
 
 
