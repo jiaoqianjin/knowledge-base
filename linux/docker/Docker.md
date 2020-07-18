@@ -1,5 +1,3 @@
-# 狂神聊Java
-
 ### Docker
 
 Docker 是一个开源的应用容器引擎，基于 [Go 语言](https://www.runoob.com/go/go-tutorial.html) 并遵从 Apache2.0 协议开源。
