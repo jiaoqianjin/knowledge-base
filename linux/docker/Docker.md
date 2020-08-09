@@ -166,39 +166,43 @@ REDHAT_ SUPPORT_ PRODUCT_ _VERSION= "7"
 ​    帮助文档
 
 ```shell
-# 1、卸载旧的版本
+#1.卸载旧版本
 yum remove docker \
-                    docker-client \
-                    docker-client-1atest \docker-common \
-                    docker- latest \
-                    docker-latest-1ogrotate \docker-logrotate \
-                    docker-engine
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+#2.需要的安装包
+yum install -y yum-utils
 
-# 2、需要的安装包
-yum insta11 -y yum-utils
-
-# 3、设置镜像的仓库
-# 默认是从国外的!
+#3.设置镜像的仓库
 yum-config-manager \
     --add-repo \
-    https ://down1oad. docker . com/linux/centos/docker-ce.repo 
+    https://download.docker.com/linux/centos/docker-ce.repo
+#上述方法默认是从国外的，不推荐
 
-# 推荐使用阿里云的，十分的快
-yum-confi g-manager \
+#推荐使用国内的
+yum-config-manager \
     --add-repo \
-    http://mirrors. aliyun. com/docker-ce/linux/centos/docker-ce.repo 
-
+    https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+    
 #更新yum软件包索引
 yum makecache fast
 
-# 4、安装dokcer docker-ce 社区版 ee企业版
-yum insta11 docker-ce docker-ce-cli containerd. io
+#4.安装docker相关的 docker-ce 社区版 而ee是企业版
+yum install docker-ce docker-ce-cli containerd.io # 这里我们使用社区版即可
 
-# 5、启动docker
-systemct1 start docker 
+#5.启动docker
+systemctl start docker
 
-# 6、使用docker version 是否安装成功!|
+#6. 使用docker version查看是否按照成功
 docker version
+
+#7. 测试
+docker run hello-world
 ```
 
 ##### run 的运行流程图 
