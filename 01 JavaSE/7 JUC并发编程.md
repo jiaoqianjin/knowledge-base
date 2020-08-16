@@ -1871,17 +1871,22 @@ ForkJoin 在JDK1.7，并行执行任务！提高效率~。在大数据量速率�
   **ForkJoin 的计算类**
 
 ```java
-package com.ogj.forkjoin;
+package com.marchsoft.forkjoin;
 
 import java.util.concurrent.RecursiveTask;
 
-public class ForkJoinDemo extends RecursiveTask<Long> {
+/**
+ * Description：
+ *
+ * @author jiaoqianjin
+ * Date: 2020/8/13 8:33
+ **/
 
+public class ForkJoinDemo extends RecursiveTask<Long> {
     private long star;
     private long end;
-
-    //临界值
-    private long temp=1000000L;
+    /** 临界值 */
+    private long temp = 1000000L;
 
     public ForkJoinDemo(long star, long end) {
         this.star = star;
@@ -1890,94 +1895,105 @@ public class ForkJoinDemo extends RecursiveTask<Long> {
 
     /**
      * 计算方法
-     * @return Long
+     * @return
      */
     @Override
     protected Long compute() {
-        if((end-star)<temp){
+        if ((end - star) < temp) {
             Long sum = 0L;
             for (Long i = star; i < end; i++) {
-                sum+=i;
+                sum += i;
             }
-//            System.out.println(sum);
             return sum;
         }else {
-            //使用forkJoin 分而治之 计算
-            //计算平均值
-            long middle = (star+ end)/2;
-            ForkJoinDemo forkJoinDemoTask1 = new ForkJoinDemo(star, middle);
-            forkJoinDemoTask1.fork();  //拆分任务，把线程任务压入线程队列
-            ForkJoinDemo forkJoinDemoTask2 = new ForkJoinDemo(middle, end);
-            forkJoinDemoTask2.fork();  //拆分任务，把线程任务压入线程队列
-            long taskSum = forkJoinDemoTask1.join() + forkJoinDemoTask2.join();
+            // 使用ForkJoin 分而治之 计算
+            //1 . 计算平均值
+            long middle = (star + end) / 2;
+            ForkJoinDemo forkJoinDemo1 = new ForkJoinDemo(star, middle);
+            // 拆分任务，把线程压入线程队列
+            forkJoinDemo1.fork();
+            ForkJoinDemo forkJoinDemo2 = new ForkJoinDemo(middle, end);
+            forkJoinDemo2.fork();
+
+            long taskSum = forkJoinDemo1.join() + forkJoinDemo2.join();
             return taskSum;
         }
     }
 }
-
-
 ```
 
 **测试类**
 
 ```java
-package com.ogj.forkjoin;
+package com.marchsoft.forkjoin;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.stream.LongStream;
 
-public class Test {
+/**
+ * Description：
+ *
+ * @author jiaoqianjin
+ * Date: 2020/8/13 8:43
+ **/
+
+public class ForkJoinTest {
+    private static final long SUM = 20_0000_0000;
+
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        test1(); // 540
-        test2(); // 7967
-        test3(); // 171
+        test1();
+        test2();
+        test3();
     }
 
     /**
-     * 普通计算
+     * 使用普通方法
      */
-    public static void test1(){
+    public static void test1() {
         long star = System.currentTimeMillis();
         long sum = 0L;
-        for (long i = 1; i < 20_0000_0000; i++) {
-            sum+=i;
+        for (long i = 1; i < SUM ; i++) {
+            sum += i;
         }
         long end = System.currentTimeMillis();
-        System.out.println("sum="+"时间："+(end-star));
         System.out.println(sum);
+        System.out.println("时间：" + (end - star));
+        System.out.println("----------------------");
     }
-
     /**
-     * 使用ForkJoin
+     * 使用ForkJoin 方法
      */
     public static void test2() throws ExecutionException, InterruptedException {
         long star = System.currentTimeMillis();
+
         ForkJoinPool forkJoinPool = new ForkJoinPool();
-        ForkJoinTask<Long> task = new ForkJoinDemo(0L, 20_0000_0000L);
+        ForkJoinTask<Long> task = new ForkJoinDemo(0L, SUM);
         ForkJoinTask<Long> submit = forkJoinPool.submit(task);
-        Long aLong = submit.get();
-        System.out.println(aLong);
+        Long along = submit.get();
+
+        System.out.println(along);
         long end = System.currentTimeMillis();
-        System.out.println("sum="+"时间："+(end-star));
+        System.out.println("时间：" + (end - star));
+        System.out.println("-----------");
     }
-
-
     /**
-     * 使用Stream 并行流
+     * 使用 Stream 流计算
      */
-    public static void test3(){
+    public static void test3() {
         long star = System.currentTimeMillis();
-        //Stream并行流()
+
         long sum = LongStream.range(0L, 20_0000_0000L).parallel().reduce(0, Long::sum);
         System.out.println(sum);
         long end = System.currentTimeMillis();
-        System.out.println("sum="+"时间："+(end-star));
+        System.out.println("时间：" + (end - star));
+        System.out.println("-----------");
     }
 }
-
 ```
+
+![image-20200813090527527](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/image-20200813090527527.png)
 
 **.parallel().reduce(0, Long::sum)使用一个并行流去计算整个计算，提高效率。**
 
@@ -2053,13 +2069,29 @@ U：是代表的 **抛出异常的错误信息**；
 
 ## 16. JMM
 
-### 1）请你谈谈你对Volatile 的理解
+### 1）对Volatile 的理解
 
 **Volatile** 是 Java 虚拟机提供 **轻量级的同步机制**
 
 **1、保证可见性
 2、不保证原子性
 3、禁止指令重排**
+
+**如何实现可见性**
+
+volatile变量修饰的共享变量在进行写操作的时候回多出一行汇编：
+
+0x01a3de1d:movb $0×0，0×1104800（%esi）;0x01a3de24**:lock** addl $0×0,(%esp);
+
+Lock前缀的指令在多核处理器下会引发两件事情。
+
+1）将当前处理器缓存行的数据写回到系统内存。
+
+2）这个写回内存的操作会使其他cpu里缓存了该内存地址的数据无效。
+
+**多处理器总线嗅探：**
+
+​    为了提高处理速度，处理器不直接和内存进行通信，而是先将系统内存的数据读到内部缓存后再进行操作，但操作不知道何时会写到内存。如果对声明了volatile的变量进行写操作，JVM就会向处理器发送一条lock前缀的指令，将这个变量所在缓存行的数据写回到系统内存。但是在**多处理器下**，为了保证各个处理器的缓存是一致的，就会实现缓存缓存一致性协议，**每个处理器通过嗅探在总线上传播的数据来检查自己的缓存值是不是过期了，如果处理器发现自己缓存行对应的内存地址呗修改，就会将当前处理器的缓存行设置无效状态**，当处理器对这个数据进行修改操作的时候，会重新从系统内存中把数据库读到处理器缓存中。
 
 ### 2）什么是JMM？
 
@@ -2272,8 +2304,8 @@ y=x*x;   //4
 
 | 线程A | 线程B |
 | ----- | ----- |
-| x=a   | y=b   |
 | b=1   | a=2   |
+| x=a   | y=b   |
 
 可能在线程A中会出现，先执行b=1,然后再执行x=a；
 
@@ -2611,20 +2643,25 @@ public class CASDemo {
         new Thread(() -> {
             int stamp = atomicStampedReference.getStamp(); // 获得版本号
             System.out.println("a1=>" + stamp);
+            
             try {
                 TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            // 修改操作时，版本号更新 + 1
             atomicStampedReference.compareAndSet(1, 2,
                     atomicStampedReference.getStamp(),
                     atomicStampedReference.getStamp() + 1);
+            
             System.out.println("a2=>" + atomicStampedReference.getStamp());
+            // 重新把值改回去， 版本号更新 + 1
             System.out.println(atomicStampedReference.compareAndSet(2, 1,
                     atomicStampedReference.getStamp(),
                     atomicStampedReference.getStamp() + 1));
             System.out.println("a3=>" + atomicStampedReference.getStamp());
         }, "a").start();
+        
         // 乐观锁的原理相同！
         new Thread(() -> {
             int stamp = atomicStampedReference.getStamp(); // 获得版本号
@@ -2634,7 +2671,7 @@ public class CASDemo {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println(atomicStampedReference.compareAndSet(1, 6,
+            System.out.println(atomicStampedReference.compareAndSet(1, 3,
                     stamp, stamp + 1));
             System.out.println("b2=>" + atomicStampedReference.getStamp());
         }, "b").start();
@@ -2775,7 +2812,8 @@ public final int getAndAddInt(Object var1, long var2, int var4) {
 ```java
 public class SpinlockDemo {
 
-    //int 0
+    // 默认
+    // int 0
     //thread null
     AtomicReference<Thread> atomicReference=new AtomicReference<>();
 
@@ -2792,7 +2830,7 @@ public class SpinlockDemo {
 
 
     //解锁
-    public void myunlock(){
+    public void myUnlock(){
         Thread thread=Thread.currentThread();
         System.out.println(thread.getName()+"===> myUnlock");
         atomicReference.compareAndSet(thread,null);
@@ -2818,7 +2856,7 @@ public class TestSpinLock {
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                spinlockDemo.myunlock();
+                spinlockDemo.myUnlock();
             }
         },"t1").start();
 
@@ -2832,7 +2870,7 @@ public class TestSpinLock {
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                spinlockDemo.myunlock();
+                spinlockDemo.myUnlock();
             }
         },"t2").start();
     }
