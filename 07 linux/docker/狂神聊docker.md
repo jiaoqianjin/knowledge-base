@@ -1030,6 +1030,7 @@ ROOT  docs  examples  host-manager  manager
 # 启动elasticsearch
 [root@iz2zeak7sgj6i7hrb2g862z ~]# docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.6.2
 
+
 # 测试一下es是否成功启动
 ➜  ~ curl localhost:9200
 {
@@ -1395,3 +1396,4 @@ hello-world           latest              bf756fb1ae65        4 months ago      
 如果你想要保存当前容器的状态，就可以通过commit来提交，获得一个镜像，就好比我们我们使用虚拟机的快照。
 
 入门成功！！！！
+
