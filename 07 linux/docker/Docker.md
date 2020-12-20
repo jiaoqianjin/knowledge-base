@@ -343,7 +343,7 @@ docker start 容器 id docker attach 容器 id  # 进入正在运行的容器
 #安装启动mysq1，需要配置密码的，这是要注意点! 
 #官方测试: docker run --name some -mysql -e MYSQL_ ROOT_ PASSWORD=my-secret-pw -d mysq1:tag 
 #启动我们的 -d后台运行 p端口映射 -V卷挂载 -e环境配置 --name容器名字 
-[root@kuangshen home]# docker run -p 3306:3306 --name mysql -v /data/mysql/conf:/etc/mysql/conf.d -v /data/mysql/logs:/logs -v /data/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7 
+[root@kuangshen home]# docker run -p 3306:3306 --name mysql -v /data/mysql/conf:/etc/mysql/conf.d -v /data/mysql/logs:/logs -v /data/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=@Wei520jin -d mysql:5.7 
 ```
 
 ![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223448.png)

@@ -197,12 +197,7 @@ yum remove docker \
 yum install -y yum-utils
 
 #3.设置镜像的仓库
-yum-config-manager \
-    --add-repo \
-    https://download.docker.com/linux/centos/docker-ce.repo
-#上述方法默认是从国外的，不推荐
-
-#推荐使用国内的
+yum-config-manager 
 yum-config-manager \
     --add-repo \
     https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
@@ -217,10 +212,8 @@ yum install docker-ce docker-ce-cli containerd.io # 这里我们使用社区版�
 systemctl start docker
 
 #6. 使用docker version查看是否按照成功
-docker version
 
-#7. 测试
-docker run hello-world
+docker r
 12345678910111213141516171819202122232425262728293031323334353637
 #8.查看已经下载的镜像(从这里可以查看已有镜像的id)
 [root@iz2zeak7sgj6i7hrb2g862z ~]# docker images
@@ -1397,3 +1390,4 @@ hello-world           latest              bf756fb1ae65        4 months ago      
 
 入门成功！！！！
 
+![20200603155335165](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201207110744.png)

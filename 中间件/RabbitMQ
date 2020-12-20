@@ -1,0 +1,40 @@
+# RabbitMQ
+
+![image-20201113171010271](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113171010.png)
+
+## 1. 点对点模式（简单队列）
+
+![image-20201112160901960](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201112160902.png)
+
+消息应答模式，ACK
+
+![image-20201113103907228](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113151023.png)
+
+## 2. 工作队列
+
+![image-20201113171037187](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113171037.png)
+
+![公平队列](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113170901.png)
+
+## 3. 发布订阅模式
+
+![image-20201113110509097](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113110509.png)
+
+![image-20201113111102218](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113111102.png)
+
+## 4. 路由模式
+
+![image-20201113160056573](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113160056.png)
+
+![image-20201113155914551](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113155914.png)
+
+## 5. 通配符模式
+
+![image-20201113164739096](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113164739.png)
+
+## RabbitMQ消息确认机制
+
+![image-20201113200956932](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113200957.png)
+
+![image-20201113202016364](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20201113202016.png)
+
