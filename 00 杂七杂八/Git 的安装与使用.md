@@ -143,11 +143,9 @@ $ git push -u origin master -f # 强制提交
 
 
 
-### 使用时遇到的问题
+### 5.使用时遇到的问题
 
-
-
-**1. fatal: remote origin already exists.** 
+#### 1. fatal: remote origin already exists.
 
 ```bash
 # 先删除 
@@ -155,8 +153,9 @@ $ git remote rm origin
 # 再次执行添加就可以了　 
 ```
 
-**2. 【git】 修改已经push了的commit信息**
+#### 2.【git】 修改已经push了的commit信息
 
+```bash
 如题，本条仅适用于修改已经push过了的最近一次的commit注释信息，确保本地文件的最新的。 
 
 step1：使用【git commit --amend】命令，会进入到vim编辑器。 
@@ -166,3 +165,21 @@ step2：输入【i】，即进入编辑模式，此时编辑提交信息。
 step3：编辑好之后，输入【:wq】，即保存和退出。 
 
 step4：输入【git push -f】强制提交。 操作完之后，再看提交记录，即可看到修改的注释信息 
+```
+
+#### 3. Git克隆远程仓库指定分支，并在本地重命名
+
+```bash
+git clone -b <远程指定分支> <远程仓库地址> <本地文件夹名>
+git clone -b develop https://github.com/test/test.git test
+```
+
+#### 4. git在.gitignore添加忽略文件不起作用
+
+```bash
+# 置所有缓存（注意后面有个.）
+git rm -r --cached .
+# 只删除指定的缓存
+git rm -r --cached */target/
+```
+
