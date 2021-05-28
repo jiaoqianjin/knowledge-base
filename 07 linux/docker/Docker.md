@@ -1,4 +1,4 @@
-### Docker
+Docker
 
 Docker 是一个开源的应用容器引擎，基于 [Go 语言](https://www.runoob.com/go/go-tutorial.html) 并遵从 Apache2.0 协议开源。
 
@@ -207,7 +207,7 @@ docker run hello-world
 
 ##### run 的运行流程图 
 
-##### ![1590834468452](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223441.png)  
+![1590834468452](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20200602223441.png)  
 
    ##### 底层原理
 

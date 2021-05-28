@@ -183,3 +183,66 @@ git rm -r --cached .
 git rm -r --cached */target/
 ```
 
+### 5. 
+
+![image-20210425181059724](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210425181101.png)
+
+出现这个问题的最主要原因还是在于本地仓库和远程仓库实际上是独立的两个仓库
+
+查阅了一下资料，发现可以在pull命令后紧接着使用`--allow-unrelated-history`选项来解决问题（该选项可以合并两个独立启动仓库的历史）。
+
+命令：
+
+```bash
+$git pull origin master --allow-unrelated-histories
+```
+
+### 6.解决git pull每次提示输入账号密码的问题
+
+1. git bash进入你的项目目录
+
+2. 输入以下命令会在配置文件里添加信息，作用是用来存储你的git账号和密码
+
+```bash
+git config --global credential.helper store
+```
+
+3. 执行后，再执行 git pull，这时候会提示输入git账号和密码，输了这一次后，以后再拉取代码就不会再提示登录了
+
+4. 配置文件就会新增一项
+
+   helper = store
+
+5. 通过 git config --list | grep credential 查看持久化存储的方式
+
+```bash
+credential.helper=osxkeychain
+
+credential.helper=store
+```
+
+第一种就是mac自带的钥匙串 (启动台->其他->钥匙串访问， 搜索git相关 删掉目标信息)
+
+第二种是文件存储地址在 ~/.git-credentials
+
+通过vim 修改文件
+
+```bash
+vim ~/.git-credentials
+```
+
+6. 取消保存
+
+```bash
+git config  --global credential.helper uninstall
+```
+
+    location / {
+      root   /var/www/html/plumvill-admin/dist;
+      index  index.html;
+      try_files $uri $uri/ /index.html;
+    }
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+      root   /usr/share/nginx/html;
+    }

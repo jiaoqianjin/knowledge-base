@@ -85,3 +85,51 @@
 ### 7. 总线
 
 ![image-20210413093310085](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210413093310.png)
+
+### 8. 系统可靠性分析
+
+串联系统与并联系统
+
+![image-20210417193825717](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210417193834.png)
+
+模冗余系统与混合系统
+
+![image-20210417194839377](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210417194839.png)
+
+### 9. 差错控制
+
+#### 1. crc与海明校验码
+
+![image-20210417200318664](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210417200318.png)
+
+#### 2. 循环校验码CRC
+
+![-4fc5093177786b22](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210524175332.jpg)
+
+#### 3. 海明校验码
+
+![image-20210524172805839](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210524172807.png)
+
+## 二、操作系统基本原理
+
+### 1. 操作系统-概述
+
+![image-20210417202500981](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210417202501.png)
+
+![image-20210417202603806](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210417202603.png)
+
+### 2. 进程管理
+
+#### 1.进程的状态
+
+![image-20210417202658906](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210417202659.png)
+
+#### 2. 前趋图
+
+![image-20210417203155452](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210417203155.png)
+
+#### 3. 进程的同步与互斥
+
+![image-20210417203224695](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210417203224.png)
+
+![image-20210417205617029](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20210417205617.png)
