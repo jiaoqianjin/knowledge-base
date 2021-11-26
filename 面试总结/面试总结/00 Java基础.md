@@ -1,4 +1,17 @@
+
+
 # Java基础
+
+[Java 全栈知识体系](https://www.pdai.tech/)
+
+著作权归https://pdai.tech所有。 链接：https://www.pdai.tech/md/java/thread/java-thread-x-thread-basic.html
+
+[并发编程面试题（2020最新版）](https://thinkwon.blog.csdn.net/article/details/104863992)
+
+版权声明：本文为CSDN博主「ThinkWon」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/ThinkWon/article/details/104863992
+
+[JavaGuide](https://javaguide.cn/)
 
 ## 一、面向对象
 
@@ -89,8 +102,8 @@ Java中，可以使用访问修饰符来保护对类、变量、方法和构造�
 **特点**
 
 1. 被static修饰的变量或者方法是独立于该类的任何对象，也就是说，这些变量和方法**不属于任何一个实例对象，而是被类的实例对象所共享**。
-2. static变量值在类加载的时候分配空间，以后创建类对象的时候不会重新分配。赋值的话，是可以任意赋值的！
-3. 被static修饰的变量或者方法是优先于对象存在的，也就是说当一个类加载完毕之后，即便没有创建对象，也可以去访问。
+2. static变量值在类加载的时候分配空间，以后创建类对象的时候不会重新分配。赋值的话，是可以任意赋值的！静态变量在内存中只存在一份。
+3. 被static修饰的变量或者方法是优先于对象存在的，也就是说当一个类加载完毕之后，即便没有创建对象，也可以去访问。可以直接通过类名来访问它。
 
 **应用场景**
 
@@ -107,8 +120,183 @@ Java中，可以使用访问修饰符来保护对类、变量、方法和构造�
 1. 静态只能访问静态。 
 2. 非静态既可以访问非静态的，也可以访问静态的。
 
+#### 2.2.2 final
+
+**1. 数据**
+
+声明数据为常量，可以是编译时常量，也可以是在运行时被初始化后不能被改变的常量。
+
+- 对于基本类型，final 使数值不变；
+- 对于引用类型，final 使引用不变，也就不能引用其它对象，但是被引用的对象本身是可以修改的。
+
+**2. 方法**
+
+**声明方法不能被子类重写。**
+
+private 方法隐式地被指定为 final，如果在子类中定义的方法和基类中的一个 private 方法签名相同，此时子类的方法不是重写基类方法，而是在子类中定义了一个新的方法。
+
+**3. 类**
+
+**声明类不允许被继承。**
+
 ## 三、泛型
 
 ### 3.1 为什么使用泛型
 
 **适用于多种数据类型执行相同的代码**（代码复用）
+
+### 3.2 泛型的类型擦除
+
+#### 3.2.1 伪泛型
+
+Java泛型这个特性是从JDK 1.5才开始加入的，因此为了兼容之前的版本，Java泛型的实现采取了“**伪泛型**”的策略，即Java在语法上支持泛型，但是在编译阶段会进行所谓的“**类型擦除**”（Type Erasure），将所有的泛型表示（尖括号中的内容）都替换为具体的类型（其对应的原生态类型），就像完全没有泛型一样。
+
+#### 3.2.2 类型擦除原则
+
+- 消除类型参数声明，即删除`<>`及其包围的部分。
+- 根据类型参数的上下界推断并替换所有的类型参数为原生态类型：如果类型参数是无限制通配符或没有上下界限定则替换为Object，如果存在上下界限定则根据子类替换原则取类型参数的最左边限定类型（即父类）。
+- 为了保证类型安全，必要时插入强制类型转换代码。
+- 自动产生“桥接方法”以保证擦除类型后的代码仍然具有泛型的“多态性”。
+
+#### 3.2.3 如何擦除
+
+- 擦除类定义中的类型参数 - 无限制类型擦除
+
+  当类定义中的类型参数没有任何限制时，在类型擦除中直接被替换为Object，即形如`<T>`和`<?>`的类型参数都被替换为Object。
+
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211120111158.png)
+
+
+
+- 擦除类定义中的类型参数 - 有限制类型擦除
+
+  当类定义中的类型参数存在限制（上下界）时，在类型擦除中替换为类型参数的上界或者下界，比如形如`<T extends Number>`和`<? extends Number>`的类型参数被替换为`Number`，`<? super Number>`被替换为Object。
+
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211120111249.png)
+
+
+
+- 擦除方法定义中的类型参数
+
+  ![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211120111319.png)
+
+### 3.3 编译期检查
+
+> 既然说类型变量会在编译的时候擦除掉，那为什么我们往 ArrayList 创建的对象中添加整数会报错呢？不是说泛型变量String会在编译的时候变为Object类型吗？为什么不能存别的类型呢？既然类型擦除了，如何保证我们只能使用泛型变量限定的类型呢？
+
+Java编译器是通过先检查代码中泛型的类型，然后在进行类型擦除，再进行编译。
+
+## 四、数据类型
+
+### 1. 基本数据类型
+
+- ### Java 中的几种基本数据类型是什么？对应的包装类型是什么？各自占用多少字节呢？
+
+  Java 中有 8 种基本数据类型，分别为：
+
+  1. 6 种数字类型 ：`byte`、`short`、`int`、`long`、`float`、`double`
+  2. 1 种字符类型：`char`
+  3. 1 种布尔型：`boolean`。
+
+  这 8 种基本数据类型的默认值以及所占空间的大小如下：
+
+  | 基本类型  | 位数 | 字节 | 默认值  |
+  | :-------- | :--- | :--- | :------ |
+  | `int`     | 32   | 4    | 0       |
+  | `short`   | 16   | 2    | 0       |
+  | `long`    | 64   | 8    | 0L      |
+  | `byte`    | 8    | 1    | 0       |
+  | `char`    | 16   | 2    | 'u0000' |
+  | `float`   | 32   | 4    | 0f      |
+  | `double`  | 64   | 8    | 0d      |
+  | `boolean` | 1    |      | false   |
+
+  另外，对于 `boolean`，官方文档未明确定义，它依赖于 JVM 厂商的具体实现。逻辑上理解是占用 1 位，但是实际中会考虑计算机高效存储因素。
+
+### 2. 自动装箱与拆箱
+
+- **装箱**：将基本类型用它们对应的引用类型包装起来；
+- **拆箱**：将包装类型转换为基本数据类型；
+
+举例：
+
+```java
+Integer i = 10;  //装箱
+int n = i;   //拆箱
+```
+
+### 3. 缓存池
+
+Java 基本类型的包装类的大部分都实现了常量池技术。`Byte`,`Short`,`Integer`,`Long` 这 4 种包装类默认创建了数值 **[-128，127]** 的相应类型的缓存数据，`Character` 创建了数值在[0,127]范围的缓存数据，`Boolean` 直接返回 `True` Or `False`。
+
+new Integer(123) 与 Integer.valueOf(123) 的区别在于:
+
+- new Integer(123) 每次都会新建一个对象
+- Integer.valueOf(123) 会使用缓存池中的对象，多次调用会取得同一个对象的引用。
+
+**基本类型对应的缓冲池如下:**
+
+- boolean values true and false
+- all byte values
+- short values between -128 and 127
+- int values between -128 and 127
+- char in the range \u0000 to \u007F
+
+在使用这些基本类型对应的包装类型时，就可以直接使用缓冲池中的对
+
+## 五、String
+
+### 5.1 基本概念
+
+**String 被声明为 final，因此它不可被继承。**
+
+内部使用 char 数组存储数据，该数组被声明为 final，这意味着 value 数组初始化之后就不能再引用其它数组。并且 String 内部没有改变 value 数组的方法，因此可以保 String 不可变。
+
+```java
+public final class String
+    implements java.io.Serializable, Comparable<String>, CharSequence {
+    /** The value is used for character storage. */
+    private final char value[];
+```
+
+### 5.2 String的优势
+
+1. **可以缓存 hash 值**
+
+   因为 String 的 hash 值经常被使用，例如 String 用做 HashMap 的 key。不可变的特性可以使得 hash 值也不可变，因此只需要进行一次计算。
+
+2. **安全性**
+
+​	String 经常作为参数，String 不可变性可以保证参数不可变。例如在作为网络连接参数的情况下如果 String 是可变的，那么在网络连接过程中，String 被改变，改变 String 对象的那一方以为现在连接的是其它主机，而实际情况却不一定是。
+
+3. **线程安全**
+
+   String 不可变性天生具备线程安全，可以在多个线程中安全地使用。
+
+### 5.3 String, StringBuffer and StringBuilder
+
+#### 1. 可变性
+
+- String 不可变
+- StringBuffer 和 StringBuilder 可变
+
+#### 2. 线程安全
+
+- String 不可变，因此是线程安全的
+- StringBuilder 不是线程安全的
+- StringBuffer 是线程安全的，内部使用 synchronized 进行同步
+
+### 5.4 String.intern()
+
+使用 String.intern() 可以保证相同内容的字符串变量引用同一的内存对象。
+
+下面示例中，s1 和 s2 采用 new String() 的方式新建了两个不同对象，而 s3 是通过 s1.intern() 方法取得一个对象引用。intern() 首先把 s1 引用的对象放到 String Pool(字符串常量池)中，然后返回这个对象引用。因此 s3 和 s1 引用的是同一个字符串常量池的对象。
+
+```java
+String s1 = new String("aaa");
+String s2 = new String("aaa");
+System.out.println(s1 == s2);           // false
+String s3 = s1.intern();
+System.out.println(s1.intern() == s3);  // true
+```
+
