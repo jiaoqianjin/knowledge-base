@@ -299,6 +299,25 @@ channel.tzCommit;
 
 **一般在生产者这块避免数据丢失，都是用 confirm 机制的。**
 
+##### 2.5.2.3 confirm实现
+
+1. 添加配置参数
+
+```yml
+# Confirm 机制与Return 机制可以确定消息是否到达MQ服务器，如果没有到达可以做重试与异常通知
+rabbitmq:
+	publisher-confirm-type: CORRELATED
+	publisher-returns: true
+```
+
+
+
+![image-20211204172902812](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211204172930.png)
+
+2. 实现`setConfirmCallback()`方法
+
+![image-20211204173345890](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211204173346.png)
+
 #### 2.5.3 RabbitMQ弄丢了数据
 
  **解决思路：**
@@ -317,6 +336,12 @@ channel.tzCommit;
 
 **必须要同时设置这两个持久化才行**，RabbitMQ哪怕是挂了，再次重启，也会从磁盘上重启恢复queue，恢复这个queue的数据。
 
+
+
+![image-20211204174754623](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211204174754.png)
+
+![image-20211204174823600](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211204174823.png)
+
 **存在问题：**
 
 ​	RabbitMQ还没持久化就挂了，可能会导致少量数据丢失，但是这种情况的概率比较小。
@@ -334,6 +359,10 @@ channel.tzCommit;
 解决思路：
 
 ​	**使用RabbitMQ提供的ack机制**，需要关闭RabbitMQ的自动ack，每次业务处理完毕之后，手动ack，这是如果业务异常导致消息丢失触发会导致消息重发，并且可以自定义重发次数。
+
+![image-20211204174024754](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211204174024.png)
+
+![image-20211204174316525](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211204174316.png)
 
 #### 2.5.5 总结
 

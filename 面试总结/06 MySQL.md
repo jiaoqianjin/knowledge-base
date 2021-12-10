@@ -184,9 +184,9 @@ EXPLAIN SELECT * FROM test_table WHERE age = 10;
 
 同时我们还可以发现在a值相等的情况下，b值又是按顺序排列的，但是这种顺序是相对的。所以**最左匹配原则遇上范围查询就会停止**，剩下的字段都无法使用索引。例如a = 1 and b = 2 a,b字段都可以使用索引，因为在a值确定的情况下b是相对有序的，而a>1and b=2，a字段可以匹配上索引，但b值不可以，因为a的值是一个范围，在这个范围中b是无序的。
 
-### 1.5 如何做MySQL的性能优化
+### 1.4 如何做MySQL的性能优化
 
-#### 1.5.1 使用Explain进行分析
+#### 1.4.1 使用Explain进行分析
 
 Explain 用来分析 SELECT 查询语句，开发人员可以通过分析 Explain 结果来优化查询语句。
 
@@ -196,7 +196,7 @@ Explain 用来分析 SELECT 查询语句，开发人员可以通过分析 Explai
 - key : 使用的索引
 - rows : 扫描的行数
 
-#### 1.5.2 优化数据访问
+#### 1.4.2 优化数据访问
 
 ##### 减少请求的数据量
 
@@ -223,7 +223,7 @@ Explain 用来分析 SELECT 查询语句，开发人员可以通过分析 Explai
     - **模糊搜索**导致的索引失效
     - **NOT IN、NOT EXISTS** 导致索引失效、
 
-#### 1.5.3 重构查询方式
+#### 1.4.3 重构查询方式
 
 ##### 切分大查询
 
@@ -251,6 +251,10 @@ SELECT * FROM tag WHERE tag='mysql';
 SELECT * FROM tag_post WHERE tag_id=1234;
 SELECT * FROM post WHERE post.id IN (123,456,567,9098,8904);
 ```
+
+### 1.5 如何保证mysql与redis的数据一致性？
+
+![image-20211202102839856](C:\Users\dell\AppData\Roaming\Typora\typora-user-images\image-20211202102839856.png)
 
 
 

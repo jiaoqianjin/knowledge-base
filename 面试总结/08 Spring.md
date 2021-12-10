@@ -446,3 +446,177 @@ public OneService getService(status) {
 - **`TransactionDefinition.PROPAGATION_SUPPORTS`**: 如果当前存在事务，则加入该事务；如果当前没有事务，则以非事务的方式继续运行。
 - **`TransactionDefinition.PROPAGATION_NOT_SUPPORTED`**: 以非事务方式运行，如果当前存在事务，则把当前事务挂起。
 - **`TransactionDefinition.PROPAGATION_NEVER`**: 以非事务方式运行，如果当前存在事务，则抛出异常。
+
+## 五、Spring循环依赖及三级缓存
+
+Spring启动过程大致如下：
+
+1. 创建beanFactory，加载配置文件
+2. 解析配置文件转化beanDefination，获取到bean的所有属性、依赖及初始化用到的各类处理器等
+3. 刷新beanFactory容器，初始化所有单例bean
+4. 注册所有的单例bean并返回可用的容器，一般为扩展的applicationContext
+
+### 5.1 循环依赖
+
+简单来讲，就是有一个 A 对象，创建 A 的时候发现 A 对象依赖 B，然后去创建 B 对象的时候，又发现 B 对象依赖 C，然后去创建 C 对象的时候，又发现 C 对象依赖 A。这就是所谓的循环依赖。
+
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211206214331.webp)
+
+### 5.2 三级缓存
+
+![image-20211206214452668](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211206214452.png)
+
+
+
+| 名称                     | 描述                                                         |
+| ------------------------ | ------------------------------------------------------------ |
+| singletonObjects()       | 一级缓存，存放完整的bean                                     |
+| earlySinglethonObjects() | 二级缓存，存放提前暴露的Bean，Bean是不完整的，未完成属性注入和执行init方法 |
+| singletonFactoried()     | 三级缓存，存放的是Bean工厂，主要是生成Bean，存放到二级缓存中 |
+
+Bean 都已经实例化了，为什么还需要一个生产 Bean 的工厂呢？这里实际上是跟 AOP 有关，如果项目中不需要为 Bean 进行代理，那么这个 Bean 工厂就会直接返回一开始实例化的对象，如果需要使用 AOP 进行代理，那么这个工厂就会发挥重要的作用了
+
+### 5.3 解决循环依赖
+
+#### 5.3.1 流程
+
+利用A,B形成的循环依赖来举例：
+
+1. **实例化 A**，此时 A 还未完成属性填充和初始化方法（@PostConstruct）的执行，A 只是一个半成品。
+2. 为 A 创建一个 Bean 工厂，并**放入到  singletonFactories** 中。
+3. 发现 A 需要注入 B 对象，但是一级、二级、三级缓存均为发现对象 B。
+4. **实例化 B**，此时 B 还未完成属性填充和初始化方法（@PostConstruct）的执行，B 只是一个半成品。
+5. 为 B 创建一个 Bean 工厂，并**放入到  singletonFactories** 中。
+6. 发现 B 需要注入 A 对象，此时在一级、二级未发现对象 A，但是在三级缓存中发现了对象 A，**从三级缓存中得到对象 A，并将对象 A 放入二级缓存中**，同时删除三级缓存中的对象 A。（注意，此时的 A 还是一个半成品，并没有完成属性填充和执行初始化方法）
+7. 将**对象 A 注入到对象 B** 中。
+8. 对象 **B 完成属性填充，执行初始化方法**，并**放入到一级缓存中，同时删除二级缓存中的对象 B**。（此时对象 B 已经是一个成品）
+9. 对象 A 得到对象 B，将**对象 B 注入到对象 A** 中。（对象 A 得到的是一个完整的对象 B）
+10. 对象 **A 完成属性填充，执行初始化方法**，并**放入到一级缓存中，同时删除二级缓存中的对象 A**。
+
+#### 5.3.2 如何获取依赖
+
+Spring在注入属性的时候是如何获取依赖的呢？是通过一个`getSingleton()` 方法去获取需要的Bean的
+
+```java
+//缓存查找bean  如果1级没有，从2级获取,也没有,从3级创建放入2级
+protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+    Object singletonObject = this.singletonObjects.get(beanName); //1级
+    if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+        synchronized (this.singletonObjects) {
+            singletonObject = this.earlySingletonObjects.get(beanName); //2级
+            if (singletonObject == null && allowEarlyReference) {
+                //3级缓存  在doCreateBean中创建了bean的实例后，封装ObjectFactory放入缓存的
+                ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+                if (singletonFactory != null) {
+                    //创建未赋值的bean
+                    singletonObject = singletonFactory.getObject();
+                    //放入到二级缓存
+                    this.earlySingletonObjects.put(beanName, singletonObject);
+                    //从三级缓存删除
+                    this.singletonFactories.remove(beanName);
+                }
+            }
+        }
+    }
+    return singletonObject;
+}   
+```
+
+当 Spring 为某个 Bean 填充属性的时候，它首先会寻找需要注入对象的名称，然后依次执行 `getSingleton()` 方法得到所需注入的对象，而获取对象的过程就是
+
+- 先从一级缓存中获取，
+- 一级缓存中没有就从二级缓存中获取，
+- 二级缓存中没有就从三级缓存中获取，
+- 如果三级缓存中也没有，那么就会去执行 `doCreateBean()` 方法创建这个 Bean。
+- 如果三级缓存中存在，则将Bean放到二级缓存，从三级缓存删除
+
+**Bean创建**
+
+```java
+protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, Object[] args) throws BeanCreationException {
+    BeanWrapper instanceWrapper = null;
+	
+    if (instanceWrapper == null) {
+        // 1. 实例化对象
+        instanceWrapper = this.createBeanInstance(beanName, mbd, args);
+    }
+
+    final Object bean = instanceWrapper != null ? instanceWrapper.getWrappedInstance() : null;
+    Class<?> beanType = instanceWrapper != null ? instanceWrapper.getWrappedClass() : null;
+   
+    // 2. 判断是否允许提前暴露对象，如果允许，则直接添加一个 ObjectFactory 到三级缓存
+	boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
+				isSingletonCurrentlyInCreation(beanName));
+    if (earlySingletonExposure) {
+        // 添加三级缓存的方法详情在下方
+        addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
+    }
+
+    // 3. 填充属性
+    this.populateBean(beanName, mbd, instanceWrapper);
+    // 4. 执行初始化方法，并创建代理
+    exposedObject = initializeBean(beanName, exposedObject, mbd);
+   
+    return exposedObject;
+}
+```
+
+添加三级缓存的方法如下：
+
+```java
+protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
+    Assert.notNull(singletonFactory, "Singleton factory must not be null");
+    synchronized (this.singletonObjects) {
+        if (!this.singletonObjects.containsKey(beanName)) {
+            //一级缓存没有，放入三级缓存
+            this.singletonFactories.put(beanName, singletonFactory);
+            //从二级缓存删除，确保二级缓存没有该bean
+            this.earlySingletonObjects.remove(beanName);
+            this.registeredSingletons.add(beanName);
+        }
+    }
+}
+```
+
+通过这段代码，我们可以知道 Spring 在实例化对象的之后，就会为其创建一个 Bean 工厂，并将此工厂加入到三级缓存中。
+
+#### 5.3.3 Aop代理问题
+
+Spring 一开始提前暴露的并不是实例化的 Bean，而是将 Bean 包装起来的 ObjectFactory。为什么要这么做呢？
+
+这实际上涉及到 AOP，如果创建的 Bean 是有代理的，那么注入的就应该是代理 Bean，而不是原始的 Bean。但是 Spring 一开始并不知道 Bean 是否会有循环依赖，通常情况下（没有循环依赖的情况下），Spring 都会在完成填充属性，并且执行完初始化方法之后再为其创建代理。但是，如果出现了循环依赖的话，Spring 就不得不为其提前创建代理对象，否则注入的就是一个原始对象，而不是代理对象。因此，这里就涉及到应该在哪里提前创建代理对象？
+
+Spring 的做法就是在 ObjectFactory 中去提前创建代理对象。它会执行 `getObject()` 方法来获取到 Bean。实际上，它真正执行的方法如下
+
+```java
+protected Object getEarlyBeanReference(String beanName, RootBeanDefinition mbd, Object bean) {
+    Object exposedObject = bean;
+    if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+        for (BeanPostProcessor bp : getBeanPostProcessors()) {
+            if (bp instanceof SmartInstantiationAwareBeanPostProcessor) {
+                SmartInstantiationAwareBeanPostProcessor ibp = (SmartInstantiationAwareBeanPostProcessor) bp;
+                // 如果需要代理，这里会返回代理对象；否则返回原始对象
+                exposedObject = ibp.getEarlyBeanReference(exposedObject, beanName);
+            }
+        }
+    }
+    return exposedObject;
+}
+```
+
+因为提前进行了代理，避免对后面重复创建代理对象，会在 `earlyProxyReferences` 中记录已被代理的对象。
+
+```java
+public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
+        implements SmartInstantiationAwareBeanPostProcessor, BeanFactoryAware {
+    @Override
+    public Object getEarlyBeanReference(Object bean, String beanName) {
+        Object cacheKey = getCacheKey(bean.getClass(), beanName);
+        // 记录已被代理的对象
+        this.earlyProxyReferences.put(cacheKey, bean);
+        return wrapIfNecessary(bean, beanName, cacheKey);
+    }
+}
+```
+
+**通过上面的解析，我们可以知道 Spring 需要三级缓存的目的是为了在没有循环依赖的情况下，延迟代理对象的创建，使 Bean 的创建符合 Spring 的设计原则。**

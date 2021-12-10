@@ -53,7 +53,53 @@ public @interface EnableAutoConfiguration {
 
 ![image-20211018204602160](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211018204603.png)
 
+```java
+private static final String[] NO_IMPORTS = new String[0];
+
+public String[] selectImports(AnnotationMetadata annotationMetadata) {
+        // <1>.判断自动装配开关是否打开
+        if (!this.isEnabled(annotationMetadata)) {
+            return NO_IMPORTS;
+        } else {
+          //<2>.获取所有需要装配的bean
+            AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader.loadMetadata(this.beanClassLoader);
+            AutoConfigurationImportSelector.AutoConfigurationEntry autoConfigurationEntry = this.getAutoConfigurationEntry(autoConfigurationMetadata, annotationMetadata);
+            return StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());
+        }
+    }
+```
+
+这里我们需要重点关注一下`getAutoConfigurationEntry()`方法，这个方法主要负责加载自动配置类的。
+
+该方法调用链如下：
+
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211207095035.png)
+
 ### 3. 如何实现一个 Starter
+
+#### 第一步，创建`threadpool-spring-boot-starter`工程
+
+![img](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211207095259.png) 
+
+#### 第二步，引入 Spring Boot 相关依赖
+
+<img src="https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211207095303.png" alt="img" style="zoom: 80%;" /> 
+
+#### 第三步，创建`ThreadPoolAutoConfiguration`
+
+<img src="https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211207095307.png" alt="img" style="zoom: 50%;" /> 
+
+#### 第四步，在`threadpool-spring-boot-starter`工程的 resources 包下创建`META-INF/spring.factories`文件
+
+<img src="https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211207095310.png" alt="img" style="zoom:80%;" /> 
+
+#### 最后新建工程引入`threadpool-spring-boot-starter`
+
+<img src="https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211207095313.png" alt="img" style="zoom:50%;" /> 
+
+#### 测试通过！！！
+
+<img src="https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211207095316.png" alt="img" style="zoom:50%;" /> 
 
 ### 4. 总结
 
