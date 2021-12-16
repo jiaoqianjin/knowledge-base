@@ -194,7 +194,7 @@ Explain 用来分析 SELECT 查询语句，开发人员可以通过分析 Explai
 
 - select_type : 查询类型，有简单查询、联合查询、子查询等
 - key : 使用的索引
-- rows : 扫描的行数
+- rows : 扫描的行数，大致估算出找到所需记录所需要读取的行数（从效率上来讲，数值越小越好）
 
 #### 1.4.2 优化数据访问
 
@@ -284,8 +284,6 @@ MVCC在MySQL InnoDB中的实现主要是为了
 - `select ... lock in share mode`
 - `select ... for update`
 - `insert`、`update`、`delete` 操作
-
-**它读取的是记录的最新版本，读取时还要保证其他并发事务不能修改当前记录，会对读取的记录进行加锁**
 
 **它读取的是记录的最新版本，读取时还要保证其他并发事务不能修改当前记录，会对读取的记录进行加锁**
 
@@ -478,3 +476,5 @@ Read View不仅仅会通过一个列表trx_list来维护事务2执行快照读�
 **2、执行 select...for update/lock in share mode、insert、update、delete 等当前读**
 
 在当前读下，读取的都是最新的数据，如果其它事务有插入新的记录，并且刚好在当前事务查询范围内，就会产生幻读！`InnoDB` 使用 [Next-key Lock](https://dev.mysql.com/doc/refman/5.7/en/innodb-locking.html#innodb-next-key-locks) 来防止这种情况。当执行当前读时，会锁定读取到的记录的同时，锁定它们的间隙，防止其它事务在查询范围内插入数据。只要我不让你插入，就不会发生幻读
+
+## 三、sharding-jdbc

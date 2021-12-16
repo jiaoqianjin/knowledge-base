@@ -138,7 +138,7 @@ Spring Boot 通过@EnableAutoConfiguration开启自动装配，通过 SpringFact
     private UserService userService2;
 ```
 
-2. 使用@Resource（name="xxx"）注解指定注入的特定实现类
+2. 使用**@Resource（name="xxx"）**注解指定注入的特定实现类
 
 ```java
 //    @Autowired

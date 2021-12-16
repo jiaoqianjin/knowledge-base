@@ -10,7 +10,7 @@
 | 消息延迟       | 微秒级                                                      | 毫秒级                               | 毫秒级                   | 毫秒以内                                      |
 | 功能特性       | 并发能力强，性能极其好，延时低，社区活跃，管理界面丰富      | 老牌产品，成熟度高，文档较多         | MQ功能比较完备，扩展性佳 | 只支持主要的MQ功能,毕竟是为大数据领域准备的。 |
 
-## 1. RabbitMQ的消息模型及使用场景分析
+## 一、 RabbitMQ的消息模型及使用场景分析
 
 ### 1.1 Hello World（基本）模型
 
@@ -71,7 +71,7 @@ X（Exchanges）：交换机一方面：接收生产者发送的消息。另一�
 
 具体使用可参看：[rabbitmq五种消息模型整理](https://www.cnblogs.com/ifme/p/12024064.html)
 
-## 2. RabbitMQ常见面试题及解决方案
+## 二、 RabbitMQ常见面试题及解决方案
 
 ### 2.1 为什么使用消息队列
 
@@ -420,4 +420,105 @@ rabbitmq:
 
 ​	临时写程序，接入数据来消费，消 费一个丢弃一个，都不要了，快速消费掉所有的消息。然后等在线用户少的时候在手动将丢失的数据，一点一点的查出来，重新加入到 MQ 里
 
-#### 
+## 三、RabbitMQ实现延迟队列
+
+### 3.1 实现原理
+
+![在这里插入图片描述](https://gitee.com/jiao_qianjin/zhishiku/raw/master/img/20211213110713.png)
+
+原理解析：
+
+1. 生产者发送消息的队列中，且针对该队列没有消费者
+2. 由于队列没有消费者，消费在国旗之后会进入到死信队列中
+3. 监听私信队列，并对私信队列中的消息进行消费
+
+通过队列中的消息延迟实现延迟队列
+
+
+
+AMQP协议，以及RabbitMQ本身没有直接支持延迟队列的功能，但是可以通过**TTL**和**DLX**模拟出延迟队列的功能。
+
+#### 3.1.1 TTL(Time To Live)
+
+RabbitMQ可以针对Queue和Message设置 `x-message-ttl`，来控制消息的生存时间，如果超时，则消息变为`dead letter`
+
+RabbitMQ针对队列中的消息过期时间有两种方法可以设置。
+
+- A: 通过队列属性设置，队列中所有消息都有相同的过期时间。
+- B: 对消息进行单独设置，每条消息TTL可以不同。
+
+如果同时使用，则消息的过期时间以两者之间TTL较小的那个数值为准。消息在队列的生存时间一旦超过设置的TTL值，就成为`dead letter`
+
+#### 3.1.2 DLX(Dead-Letter-Exchange)
+
+RabbitMQ的Queue可以配置`x-dead-letter-exchange` 和`x-dead-letter-routing-key`（可选）两个参数，如果队列内出现了dead letter，则按照这两个参数重新路由。
+
+- `x-dead-letter-exchange`：出现dead letter之后将dead letter重新发送到指定exchange
+- `x-dead-letter-routing-key`：指定routing-key发送
+
+队列出现`dead letter`的情况有：
+
+- 消息或者队列的TTL过期
+- 队列达到最大长度
+- 消息被消费端拒绝（basic.reject or basic.nack）并且requeue=false
+
+利用DLX，当消息在一个队列中变成死信后，它能被重新publish到另一个Exchange。这时候消息就可以重新被消费。
+
+### 3.2 实现
+
+#### 3.2.1 建立exchange和queue
+
+首先建立2个`exchange`和2个`queue`
+
+- `exchange_delay_begin`：这个是producer端发送时调用的exchange, 将消息发送至queue_dealy_begin中。
+- `queue_delay_begin`: 通过routingKey=”delay”绑定exchang_delay_begin, 同时**配置DLX=exchange_delay_done, 当消息变成死信时，发往exchange_delay_done中**。
+- `exchange_delay_done`: 死信的exchange, 如果不配置x-dead-letter-routing-key则采用原有默认的routingKey，即queue_delay_begin绑定exchange_delay_begin采用的“delay”。
+- queue_delay_done：消息在TTL到期之后，最终通过exchang_delay_done发送值此queue，消费端通过消费此queue的消息，即可以达到延迟的效果。
+
+```java
+// 声明交换机
+channel.exchangeDeclare("exchange_delay_begin", "direct", true);
+channel.exchangeDeclare("exchange_delay_done", "direct", true);
+
+// 初始化交换机，给死信交换机配置 x-dead-letter-exchange 参数
+Map<String, Object> args = new HashMap<String, Object>();
+args.put("x-dead-letter-exchange", "exchange_delay_done");
+channel.queueDeclare("queue_delay_begin", true, false, false, args);
+channel.queueDeclare("queue_delay_done", true, false, false, null);
+
+// 见队列绑定到对应交换机
+channel.queueBind("queue_delay_begin", "exchange_delay_begin", "delay");
+channel.queueBind("queue_delay_done", "exchange_delay_done", "delay");
+```
+
+#### 3.2.2 Consumer端
+
+```java
+// 从死信队列取出消息消费
+QueueingConsumer consumer = new QueueingConsumer(channel);
+channel.basicConsume("queue_delay_done", false, consumer);
+
+while (true) {
+    QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+    String msg = new String(delivery.getBody());
+    System.out.println("receive msg time:" + new Date() + ", msg body:" + msg);
+    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+}
+```
+
+### 3.2.3 Producer端
+
+```java
+AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
+builder.expiration("60000");//设置消息TTL
+builder.deliveryMode(2);//设置消息持久化
+AMQP.BasicProperties properties = builder.build();
+
+String message = String.valueOf(new Date());
+channel.basicPublish("exchange_delay_begin","delay",properties,message.getBytes());
+```
+
+在创建完exchange和queue之后，首先执行consumer端的代码，之后执行producer端的代码，待producer发送完毕之后，查看consumer端的输出：
+
+可以看到延迟1min消费了相关消息。
+

@@ -300,3 +300,620 @@ String s3 = s1.intern();
 System.out.println(s1.intern() == s3);  // true
 ```
 
+## 六、Java8新特性
+
+### 6.1 函数编程（lambda表达式）
+
+#### 6.1.1 stream & parallelStream
+
+每个Stream都有两种模式：顺序执行和并行执行。
+
+**顺序流**
+
+```java
+List<Person> people = list.getStream.collect(Collectors.toList());
+```
+
+**并行流**
+
+```java
+List<Person> people = list.getStream.parallel().collect(Collectors.toList());
+```
+
+顾名思义，当使用顺序方式去遍历时，每个item读完后再读下一个item。而使用并行去遍历时，数组会被分成多个段，其中每一个都在不同的线程中处理，然后将结果一起输出。
+
+**parallelStream原理：**
+
+```java
+List originList = someData;
+split1 = originalList(0, mid) // 将数据分小部分
+split2 = originalList(mid,end);
+new Runnable(split1.process());//小部分执行操作
+new Runnable(split2.process());
+List revisedList = split1 + split2;//将结果合并
+```
+
+hadoop里面的 MapReduce 本身就是用于并行处理大数据集的软件框架，其处理大数据的核心思想就是大而化小，分配到不同机器去运行map，最终通过reduce将所有机器的结果结合起来得到一个最终结果，与MapReduce不同，Stream则是利用多核技术可将大数据通过多核并行处理，而MapReduce则可以分布式的。
+
+**stream和parallelStream性能测试对比**
+
+如果是多核机器，理论上并行流则会比顺序流快上一倍
+
+```java
+long t0 = System.nanoTime();
+
+//初始化一个范围100万整数流,求能被2整除的数字，toArray()是终点方法
+
+int a[]=IntStream.range(0, 1_000_000).filter(p -> p % 2==0).toArray();
+
+long t1 = System.nanoTime();
+
+//和上面功能一样，这里是用并行流来计算
+
+int b[]=IntStream.range(0, 1_000_000).parallel().filter(p -> p % 2==0).toArray();
+
+long t2 = System.nanoTime();
+
+//我本机的结果是serial: 0.06s, parallel 0.02s，证明并行流确实比顺序流快
+
+System.out.printf("serial: %.2fs, parallel %.2fs%n", (t1 - t0) * 1e-9, (t2 - t1) * 1e-9);
+```
+
+#### 6.1.2 Stream中常用的方法
+
+##### 6.1.2.1 匿名类简写
+
+```java
+new Thread( () -> System.out.println("In Java8, Lambda expression rocks !!") ).start();
+
+// 用法
+(params) -> expression
+(params) -> statement
+(params) -> { statements }
+```
+
+##### 6.1.2.2 forEach
+
+```java
+// forEach
+List features = Arrays.asList("Lambdas", "Default Method", "Stream API", "Date and Time API");
+features.forEach(n -> System.out.println(n));
+ 
+// 使用Java 8的方法引用更方便，方法引用由::双冒号操作符标示，
+features.forEach(System.out::println);
+```
+
+##### 6.1.2.3 方法引用
+
+构造引用
+
+```java
+// Supplier<Student> s = () -> new Student();
+Supplier<Student> s = Student::new;
+```
+
+*对象::实例方法* Lambda表达式的(形参列表)与实例方法的(实参列表)类型，个数是对应
+
+```java
+// set.forEach(t -> System.out.println(t));
+set.forEach(System.out::println);  
+```
+
+*类名::静态方法*
+
+```java
+// Stream<Double> stream = Stream.generate(() -> Math.random());
+Stream<Double> stream = Stream.generate(Math::random); 
+```
+
+*类名::实例方法*
+
+```java
+//  TreeSet<String> set = new TreeSet<>((s1,s2) -> s1.compareTo(s2));
+/*  这里如果使用第一句话，编译器会有提示: Can be replaced with Comparator.naturalOrder，这句话告诉我们
+  String已经重写了compareTo()方法，在这里写是多此一举，这里为什么这么写，是因为为了体现下面
+  这句编译器的提示: Lambda can be replaced with method reference。好了，下面的这句就是改写成方法引用之后: 
+*/
+TreeSet<String> set = new TreeSet<>(String::compareTo);
+```
+
+##### 6.1.2.4 Filter & Predicate
+
+```java
+    public static void main(String args[]) {
+        List<String> names = Arrays.asList("张三丰", "张翠山", "张无忌", "金毛狮王", "赵敏");
+
+        // 张开头的
+        Predicate<String> zhang = (n) -> n.startsWith("张"); //
+        // 含三丰的
+        Predicate<String> sanfeng = (n) -> n.contains("三丰");
+        // 王结尾的
+        Predicate<String> wang = (n) -> n.endsWith("王");
+        sanfeng.equals("金毛");
+
+        //Predicate常和stream的filter配合使用，实现过滤
+        //和filter结合用 默认调用的是test()方法 姓张的
+        names.stream().filter(zhang).forEach(n -> System.out.println(n));
+
+        //and()  姓张的，含三丰的
+        names.stream().filter(zhang.and(sanfeng)).forEach(n -> System.out.println(n));
+
+        //or()  张开头的,或者 王结尾的
+        names.stream().filter(zhang.or(wang)).forEach(n -> System.out.println(n));
+
+        //negate() 不是张开头的，但是王结尾的
+        names.stream().filter(zhang.negate().and(wang)).forEach(n -> System.out.println(n));
+
+        // equals() 方法还没懂什么意思
+    }
+```
+
+##### 6.1.2.5 Map&Reduce
+
+map将集合类(例如列表)元素进行转换的。还有一个 reduce() 函数可以将所有值合并成一个
+
+```java
+List costBeforeTax = Arrays.asList(100, 200, 300, 400, 500);
+double bill = costBeforeTax.stream().map((cost) -> cost + .12*cost).reduce((sum, cost) -> sum + cost).get();
+System.out.println("Total : " + bill);
+
+//使用map方法获取list数据中的name
+List<String> names = list.stream().map(Student::getName).collect(Collectors.toList());
+System.out.println(names);
+
+//使用map方法获取list数据中的name的长度
+List<Integer> length = list.stream().map(Student::getName).map(String::length).collect(Collectors.toList());
+System.out.println(length);
+
+//将每人的分数-10
+List<Integer> score = list.stream().map(Student::getScore).map(i -> i - 10).collect(Collectors.toList());
+System.out.println(score);
+
+//计算学生总分
+Integer totalScore1 = list.stream().map(Student::getScore).reduce(0,(a,b) -> a + b);
+System.out.println(totalScore1);
+
+//计算学生总分，返回Optional类型的数据，改类型是java8中新增的，主要用来避免空指针异常
+Optional<Integer> totalScore2 = list.stream().map(Student::getScore).reduce((a,b) -> a + b);
+System.out.println(totalScore2.get());
+
+//计算最高分和最低分
+Optional<Integer> max = list.stream().map(Student::getScore).reduce(Integer::max);
+Optional<Integer> min = list.stream().map(Student::getScore).reduce(Integer::min);
+```
+
+##### 6.1.2.6 Collectors
+
+- Collectors.joining(", ")
+- Collectors.toList()
+- Collectors.groupingBy()
+- Collectors.toSet() ，生成set集合
+- Collectors.toMap(MemberModel::getUid, Function.identity())
+- Collectors.toMap(ImageModel::getAid, o -> IMAGE_ADDRESS_PREFIX + o.getUrl())
+
+```java
+//算出分数最小的那个并输出
+userList.stream().collect(Collectors.minBy(Comparator.comparingInt(User::getScore))).ifPresent(System.out::println);
+
+//算出分数最大的那个并输出（无法做到多个并列的时候求值）
+Optional optional = userList.stream().collect(Collectors.maxBy(Comparator.comparingInt(User::getScore)));
+//optional.isPresent(System.out::println);//isPresent是判断是否存在，不能接受参数
+optional.ifPresent(System.out::println);//直接使用时ifPresent
+
+//算出分数平均值并输出
+double averagint = userList.stream().collect(Collectors.averagingInt(User::getScore));
+System.out.println("averagint = " + averagint);
+
+//算出分数总和并输出
+int summingInt = userList.stream().collect(Collectors.summingInt(User::getScore));
+System.out.println("summingInt = " + summingInt);
+
+//算出汇总信息
+IntSummaryStatistics intSummaryStatistics = userList.stream().collect(Collectors.summarizingInt(User::getScore));
+System.out.println("intSummaryStatistics = " + intSummaryStatistics);
+
+//拼接名字
+String nameStrs = userList.stream().map(User::getName).collect(Collectors.joining());
+System.out.println("nameStrs = " + nameStrs);
+
+//拼接名字，调用另外一个方法，可以加前缀和后缀
+String nameStrs2 = userList.stream().map(User::getName).collect(Collectors.joining(", ", "[", "]"));
+System.out.println("nameStrs2 = " + nameStrs2);
+
+//分组：按照分数（返回的map的key是根据分组的条件来决定的，score是int，那么key就是Integer）
+Map<Integer, List<User>> scoreUsers = userList.stream().collect(Collectors.groupingBy(User::getScore));
+System.out.println("scoreUsers = " + scoreUsers);
+
+//二级分组：线按照分数分组，返回一个Map<Integer, List<User>>, 在根据用户名分组
+Map<Integer, Map<String, List<User>>> scoreNameUsers = userList.stream().collect(Collectors.groupingBy(User::getScore, Collectors.groupingBy(User::getName)));
+System.out.println("scoreNameUsers = " + scoreNameUsers);
+
+//分区,是否及格
+Map<Boolean, List<User>> jigeUsers = userList.stream().collect(Collectors.partitioningBy(user -> user.getScore() >= 60));
+System.out.println("jigeUsers = " + jigeUsers);
+
+//二级分区,是否及格,及格里面是否大于80
+Map<Boolean, Map<Boolean, List<User>>> youxiuUsers = userList.stream().collect(Collectors.partitioningBy(user -> user.getScore() >= 60, Collectors.partitioningBy(user -> user.getScore() >= 80)));
+System.out.println("youxiuUsers = " + youxiuUsers);
+
+//分区,是否及格,算出及格的个数
+Map<Boolean, Long> jigeUserCount = userList.stream().collect(Collectors.partitioningBy(user -> user.getScore() >= 60, Collectors.counting()));
+System.out.println("jigeUserCount = " + jigeUserCount);
+
+//先按照名字分组,获取每个分组分数最小的
+Map<String, User> UserCount = userList.stream().collect(Collectors.groupingBy(User::getName, Collectors.collectingAndThen(Collectors.minBy(Comparator.comparingInt(User::getScore)), Optional::get)));
+System.out.println("UserCount = " + UserCount);
+```
+
+##### 6.1.2.7 flatMap
+
+拼接Stream
+
+```java
+List<Integer> result= Stream.of(Arrays.asList(1,3),Arrays.asList(5,6)).flatMap(a->a.stream()).collect(Collectors.toList());
+```
+
+结果: [1, 3, 5, 6]
+
+
+
+##### 6.1.2.8 distinct
+
+去重
+
+```java
+List<LikeDO> likeDOs = new ArrayList<LikeDO>();
+List<Long> likeTidList = likeDOs.stream().map(LikeDO::getTid)
+                .distinct().collect(Collectors.toList());
+```
+
+##### 6.1.2.9 count
+
+计总数
+
+count方法，跟List接口的size一样，返回的都是这个集合流的元素的长度，不同的是，流是集合的一个高级工厂，中间操作是工厂里的每一道工序，我们对这个流操作完成后，可以进行元素的数量的和；
+
+```java
+int countOfAdult=persons.stream()
+                       .filter(p -> p.getAge() > 18)
+                       .map(person -> new Adult(person))
+                       .count();
+```
+
+##### 6.1.2.10 Match
+
+- anyMatch表示，判断的条件里，任意一个元素成功，返回true
+- allMatch表示，判断条件里的元素，所有的都是，返回true
+- noneMatch跟allMatch相反，判断条件里的元素，所有的都不是，返回true
+
+```java
+List<String> strs = Arrays.asList("a", "a", "a", "a", "b");
+        boolean aa = strs.stream().anyMatch(str -> str.equals("a"));
+        boolean bb = strs.stream().allMatch(str -> str.equals("a"));
+        boolean cc = strs.stream().noneMatch(str -> str.equals("a"));
+        long count = strs.stream().filter(str -> str.equals("a")).count();
+        System.out.println(aa);// TRUE
+        System.out.println(bb);// FALSE
+        System.out.println(cc);// FALSE
+        System.out.println(count);// 4
+```
+
+##### 6.1.2.11 min，max，summaryStatictics
+
+最小值，最大值
+
+```java
+List<Person> lists = new ArrayList<Person>();
+lists.add(new Person(1L, "p1"));
+lists.add(new Person(2L, "p2"));
+lists.add(new Person(3L, "p3"));
+lists.add(new Person(4L, "p4"));
+Person a = lists.stream().max(Comparator.comparing(t -> t.getId())).get();
+System.out.println(a.getId());
+```
+
+如果比较器涉及多个条件，比较复杂，可以定制
+
+```java
+ Person a = lists.stream().min(new Comparator<Person>() {
+
+      @Override
+      public int compare(Person o1, Person o2) {
+           if (o1.getId() > o2.getId()) return -1;
+           if (o1.getId() < o2.getId()) return 1;
+           return 0;
+       }
+ }).get();
+```
+
+summaryStatictics
+
+```java
+//获取数字的个数、最小值、最大值、总和以及平均值
+List<Integer> primes = Arrays.asList(2, 3, 5, 7, 11, 13, 17, 19, 23, 29);
+IntSummaryStatistics stats = primes.stream().mapToInt((x) -> x).summaryStatistics();
+System.out.println("Highest prime number in List : " + stats.getMax());
+System.out.println("Lowest prime number in List : " + stats.getMin());
+System.out.println("Sum of all prime numbers : " + stats.getSum());
+System.out.println("Average of all prime numbers : " + stats.getAverage());
+```
+
+##### 6.1.2.12 sort
+
+```java
+	public static void main(String[] args) {
+        List<Student> list = new ArrayList<>();
+ 
+        Student s1 = new Student("zhangsan","beijing",30);
+        list.add(s1);
+ 
+        Student s2 = new Student("lisi","shanghai",29);
+        list.add(s2);
+ 
+        Student s3 = new Student("lining","shandong",31);
+        list.add(s3);
+ 
+        // forEach循环
+        list.stream().forEach(student -> System.out.println(student.getAge()));
+ 
+        System.out.println("----------使用stream和sort--默认升序----------");
+        // sort排序:原集合不变，新集合按顺序排序
+        List<Student> sortList1 = list.stream().sorted((a, b) -> a.getAge().compareTo(b.getAge())).collect(Collectors.toList());
+        sortList1.stream().forEach(s-> System.out.println(s.getAge()));
+        System.out.println();
+ 
+        System.out.println("---------使用stream和sort--降序排列-----------");
+        List<Student> sortDesList = list.stream().sorted(Comparator.comparingInt(Student::getAge).reversed()).collect(Collectors.toList());
+        sortDesList.stream().forEach(s-> System.out.println(s.getAge()));
+        System.out.println();
+ 
+        System.out.println("----------不使用stream和sort------------");
+        // 使用集合的sort排序，集合自身排序发生变化
+        list.sort((a,b)->a.getAge().compareTo(b.getAge()));
+        list.stream().forEach(student -> System.out.println(student.getAge()));
+        System.out.println();
+    }
+```
+
+#### 6.1.3 Functionallnterface
+
+##### 6.1.3.1 理解注解@FunctionInterFace
+
+```java
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface FunctionalInterface{}
+```
+
+interface做注解的注解类型，被定义成java语言规范
+
+一个被它注解的接口只能有一个抽象方法，有两种例外
+
+- 第一是接口允许有实现的方法，这种实现的方法是用default关键字来标记的(java反射中java.lang.reflect.Method#isDefault()方法用来判断是否是default方法)
+
+- 第二如果声明的方法和java.lang.Object中的某个方法一样，它可以不当做未实现的方法，不违背这个原则: 一个被它注解的接口只能有一个抽象方法, 比如: `java public interface Comparator<T> { int compare(T o1, T o2); boolean equals(Object obj); }`
+
+如果一个类型被这个注解修饰，那么编译器会要求这个类型必须满足如下条件:
+
+- 这个类型必须是一个interface，而不是其他的注解类型、枚举enum或者类class
+- 这个类型必须满足function interface的所有要求，如你个包含两个抽象方法的接口增加这个注解，会有编译错误。
+
+编译器会自动把满足function interface要求的接口自动识别为function interface，所以你才不需要对上面示例中的 ITest接口增加@FunctionInterface注解。
+
+##### 6.1.3.2 自定义函数接口
+
+```java
+@FunctionalInterface
+public interface IMyInterface {
+    void study();
+}
+
+package com.isea.java;
+public class TestIMyInterface {
+    public static void main(String[] args) {
+        IMyInterface iMyInterface = () -> System.out.println("I like study");
+        iMyInterface.study();
+    }
+}
+```
+
+##### 6.1.3.3 内置四大函数接口
+
+- 消费型接口: Consumer< T> void accept(T t)有参数，无返回值的抽象方法；
+- 供给型接口: Supplier < T> T get() 无参有返回值的抽象方法；
+- 断定型接口: Predicate<T> boolean test(T t):有参，但是返回值类型是固定的boolean;
+- 函数型接口: Function<T,R> R apply(T t)有参有返回值的抽象方法；
+
+#### 6.1.4 一些例子
+
+##### 6.1.4.1 输出 年龄 > 25 的女程序员中名字排名前3位的姓名
+
+```java
+javaProgrammers.stream()
+          .filter((p) -> (p.getAge() > 25))
+          .filter((p) -> ("female".equals(p.getGender())))
+          .sorted((p, p2) -> (p.getFirstName().compareTo(p2.getFirstName())))
+          .limit(3)
+          //.forEach(e -> e.setSalary(e.getSalary() / 100 * 5 + e.getSalary()))//涨工资
+          .forEach((p) -> System.out.printf("%s %s; ", p.getFirstName(), p.getLastName()));
+```
+
+##### 6.1.4.2 工资最高的 Java programmer
+
+```java
+Person person = javaProgrammer
+    	.stream()
+    	.max((p, p2) -> (p.getSalary() - p2.getSalart()))
+    	.get()
+```
+
+##### 6.1.4.3 将Java programmers 的first name 存放到TreeSet
+
+```java
+TreeSet<String> javaDevLastName = javaProgrammers
+    	.strem()
+    	.mapToInt(P -> p.getSalary)
+    	.sum();
+```
+
+##### 6.1.4.4 Comparator多属性排序: 先按名字不分大小写排，再按GID倒序排，最后按年龄正序排
+
+```java
+public static void main(String[] args) {
+	List<Person> personList = getTestList();
+	personList.sort(Comparator.comparing(Person::getName, String.CASE_INSENSITIVE_ORDER)
+			.thenComparing(Person::getGid, (a, b) -> b.compareTo(a))
+			.thenComparingInt(Person::getAge));
+	personList.stream().forEach(System.out::println);
+}
+
+public static List<Person> getTestList() {
+	return Lists.newArrayList(new Person("dai", "301", 10), new Person("dai", "303", 10),
+			new Person("dai", "303", 8), new Person("dai", "303", 6), new Person("dai", "303", 11),
+			new Person("dai", "302", 9), new Person("zhang", "302", 9), new Person("zhang", "301", 9),
+			new Person("Li", "301", 8));
+}
+
+// 输出结果
+// Person [name=dai, gid=303, age=6]
+// Person [name=dai, gid=303, age=8]
+// Person [name=dai, gid=303, age=10]
+// Person [name=dai, gid=303, age=11]
+// Person [name=dai, gid=302, age=9]
+// Person [name=dai, gid=301, age=10]
+// Person [name=Li, gid=301, age=8]
+// Person [name=zhang, gid=302, age=9]
+// Person [name=zhang, gid=301, age=9]
+```
+
+##### 6.1.4.5 处理字符串
+
+两个新的方法可在字符串类上使用：join和chars。
+
+jion()使用指定的分隔符，将任何数量的字符串连接为一个字符串
+
+```java
+String.jion(":", "foobar", "foo", "bar");
+// => foobar:foo:bar
+```
+
+chars从字符串所有字符创建数据流，所以你可以在这些字符上使用流式操作。
+
+```java
+"foobar:foo:bar"
+    .chars()
+    .distinct()
+    .mapToObj(c -> String.valueOf((char)c))
+    .sorted()
+    .collect(Collectors.joining());
+// => :abfor
+```
+
+不仅仅是字符串，正则表达式模式串也能收益与数据流。我们可以分割任何模式串，并创建数据流来处理它们，而不是将字符串分割为单个字符的数据流，像下面这样
+
+```java
+Pattern.compile(":")
+    .splitAsStream("foobar:foo:bar")
+    .filter(s -> s.contaions("bar"))
+    .sorted()
+    .collect(Collectos.joining(":"))
+ // => bar:foobar	
+```
+
+此外正则模式串可以转换为谓词，这些谓词可以像下面那样用于过滤字符串流：
+
+```java
+Pattern pattern = Pattern.compile(".*@gmail\\.com");
+Stream.of("bob@gmail.com", "alice@hotmail.com")
+    .filter(pattern.asPredicate())
+    .count();
+// => 1
+```
+
+上面的模式串接受任何以@gmail.com结尾的字符串，并且之后用作Java8的Predicate来过滤电子邮件地址流。
+
+##### 6.1.4.6 集合--》取元素的一个属性--》去重---》组装成List--》返回
+
+```java
+List<LikeDO> likeDOs = new ArrayList<LikeDO>();
+List<Long> likeTidList = likeDOs.stream().map(LikeDO::getTid)
+                .distinct().collect(Collectors.toList());
+
+```
+
+##### 6.1.4.7 集合--》按表达式过滤--》遍历、每个元素处理--》放入预先定义的集合中
+
+```java
+// 预先定义的集合
+Map<String, StkProduct> newStockName2Product = Maps.newConcurrentMap();
+// 先过滤，然后遍历，对元素操作，之后放入map集合中
+stockProducts.stream().filter(stkProduct -> stkProduct.enabled).forEach(stkProduct -> {
+    String newName = BCConvert.bj2qj(StringUtils.replace(stkProduct.name, " ", ""));
+    newStockName2Product.put(newName, stkProduct);
+});
+```
+
+```java
+ Set<String> qjStockNames;
+ //过滤，遍历，获取value,存入对应map中
+ qjStockNames.stream().filter(name -> !acAutomaton.getKey2link().containsKey(name)).forEach(name -> {
+            String value = "";
+            StkProduct stkProduct = stockNameQj2Product.get(name);
+            if (stkProduct != null) {
+                value = stkProduct.name;
+            }
+            acAutomaton.getKey2link().put(name, value);
+        });
+
+```
+
+##### 6.1.4.8 集合--》Map
+
+```java
+List<ImageModel> imageModelList = null;
+Map<Long, String> imagesMap = null;
+// 对象list中的对象指定元素转为map
+imagesMap = imageModelList.stream().collect(Collectors.toMap(ImageModel::getAid, o -> IMAGE_ADDRESS_PREFIX + o.getUrl()));
+              
+
+Map<String, String> kvMap = postDetailCacheList.stream().collect(Collectors.toMap((detailCache) ->
+                getBbsSimplePostKey(detailCache.getTid()), JSON::toJSONString));
+
+
+Map<Long, Long> pidToTid；
+List<String> pidKeyList = pidToTid.entrySet().stream().map((o) -> getKeyBbsReplyPid(o.getValue(), o.getKey())).collect(Collectors.toList());
+
+```
+
+##### 6.1.4.9 DO模型---》Model模型
+
+```java
+List<AdDO> adDOList;
+adDOList.stream().map(adDo -> convertAdModel(adDo))
+                .collect(Collectors.toList());
+```
+
+##### 6.1.4.10 phones 是一个List<String>，将相同的元素分组、归类
+
+```java
+List<String> phones=new ArrayList<String>();
+        phones.add("a");
+        phones.add("b");
+        phones.add("a");
+        phones.add("a");
+        phones.add("c");
+        phones.add("b");
+        Map<String, List<String>> phoneClassify = phones.stream().collect(Collectors.groupingBy(item -> item));
+        System.out.println(phoneClassify);
+//返回结果: 
+//{a=[a, a, a], b=[b, b], c=[c]}
+```
+
+### 6.2 Optional类深度解析
+
+Java 8引入了一个新的Optional类。Optional类的Javadoc描述如下:
+
+> 这是一个可以为null的容器对象。如果值存在则isPresent()方法会返回true，调用get()方法会返回该对象。
+
+在利用对象或者容器取值的时候，为了避免空指针，通常在取值之前首先利用if/else进行判断，但是这样这复杂有冗余，为了是代码设计变得更加优雅，Java8提供了Optional类来优化这种写法
